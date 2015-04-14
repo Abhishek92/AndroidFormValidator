@@ -10,207 +10,206 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
-import com.validate.androidfromvalidator.annotation.Checked;
-import com.validate.androidfromvalidator.annotation.ConfirmPassword;
-import com.validate.androidfromvalidator.annotation.Email;
-import com.validate.androidfromvalidator.annotation.GroupCheck;
-import com.validate.androidfromvalidator.annotation.IPAddress;
-import com.validate.androidfromvalidator.annotation.NotEmpty;
-import com.validate.androidfromvalidator.annotation.Password;
-import com.validate.androidfromvalidator.annotation.RadioButtonCheck;
-import com.validate.androidfromvalidator.annotation.Url;
+import com.validate.androidformvalidatior.annotations.Checked;
+import com.validate.androidformvalidatior.annotations.ConfirmPassword;
+import com.validate.androidformvalidatior.annotations.Email;
+import com.validate.androidformvalidatior.annotations.GroupCheck;
+import com.validate.androidformvalidatior.annotations.IPAddress;
+import com.validate.androidformvalidatior.annotations.NotEmpty;
+import com.validate.androidformvalidatior.annotations.Password;
+import com.validate.androidformvalidatior.annotations.RadioButtonCheck;
+import com.validate.androidformvalidatior.annotations.Url;
 
 
 public class Validation {
 	Activity mActivity;
-	boolean isFlag = false;
+    private boolean isValid = true;
+
 	public boolean validate(Activity activity)
 	{
-		mActivity = activity;
+        isValid = true;
+        mActivity = activity;
 		Class cl = activity.getClass();
 		for(Field f: cl.getDeclaredFields())
 		{
-			for (Annotation a : f.getAnnotations()) {
+			for (Annotation a : f.getDeclaredAnnotations()) {
+
 				if(a.annotationType() == NotEmpty.class){
 					NotEmpty valid = (NotEmpty)a;
-					isFlag = nonEmpty(valid.id(), valid.message());
+					nonEmpty(valid.id(), valid.message());
 				}
 				else if(a.annotationType() == Email.class)
 				{
 					Email valid = (Email)a;
-					isFlag = emailTest(valid.id(), valid.message());
+				    emailTest(valid.id(), valid.message());
 				}
 				else if(a.annotationType() == Password.class)
 				{
 					Password valid = (Password)a;
-					isFlag = passwordTest(valid.id(),valid.maxLength(),valid.message());
+					passwordTest(valid.id(), valid.maxLength(), valid.message());
 				}
 				else if(a.annotationType() == ConfirmPassword.class)
 				{
 					ConfirmPassword valid = (ConfirmPassword)a;
-					isFlag = confirmPasswordTest(valid.firstID(), valid.secondID(), valid.message());
+					confirmPasswordTest(valid.firstID(), valid.secondID(), valid.message());
 				}
 				else if(a.annotationType() == Checked.class)
 				{
 					Checked valid = (Checked)a;
-					isFlag = validateCheckBox(valid.id(),valid.message());
+					validateCheckBox(valid.id(), valid.message());
 				}
 				else if(a.annotationType() == GroupCheck.class)
 				{
 					GroupCheck valid = (GroupCheck)a;
-					isFlag = validateRadioGroup(valid.id(),valid.message());
+					validateRadioGroup(valid.id(), valid.message());
 				}
 				else if(a.annotationType() == RadioButtonCheck.class)
 				{
 					RadioButtonCheck valid = (RadioButtonCheck)a;
-					isFlag = validateRadioButton(valid.id(),valid.message());
+					validateRadioButton(valid.id(), valid.message());
 				}
 				else if(a.annotationType() == Url.class)
 				{
 					Url valid = (Url)a;
-					isFlag = urlTest(valid.id(),valid.message());
+					urlTest(valid.id(), valid.message());
 				}
 				else if(a.annotationType() == IPAddress.class)
 				{
 					IPAddress valid = (IPAddress)a;
-					isFlag = ipAddrTest(valid.id(),valid.message());
+					ipAddrTest(valid.id(), valid.message());
 				}
 			}
 		}
-		return isFlag;
+		return isValid;
 	}
 	
-	private boolean nonEmpty(int id,String message)
+	private void nonEmpty(int id,String message)
 	{
 		EditText et = (EditText) mActivity.findViewById(id);
 		if(TextUtils.isEmpty(et.getText().toString())){
 			et.setError(message);
-			return false;
-		}
-		else
-			return true;
+			isValid = false;
+        }
 	}
 	
-	private boolean emailTest(int id,String message)
+	private void emailTest(int id,String message)
 	{
 		EditText et = (EditText) mActivity.findViewById(id);
 		if(TextUtils.isEmpty(et.getText().toString()))
-				
 		{
 			et.setError(message);
-			return false;
+            isValid = false;
 		}
 		else if(!Patterns.EMAIL_ADDRESS.matcher(et.getText().toString()).matches())
 		{
 			et.setError(message);
-			return false;
+            isValid = false;
 		
 		}
-		else
-			return true;
 	}
 	
-	private boolean passwordTest(int id,int length,String message)
+	private void passwordTest(int id,int length,String message)
 	{
 		EditText et = (EditText) mActivity.findViewById(id);
 		if(TextUtils.isEmpty(et.getText().toString()))
 		{
 			et.setError(message);
-			return false;
+            isValid = false;
 		}
 		else if(et.getText().toString().length() < length)
 		{
 			et.setError(message);
-			return false;
+            isValid = false;
 		}
-		else
-			return true;
+
 	}
 	
-	private boolean confirmPasswordTest(int firstId, int secondID,String message)
+	private void confirmPasswordTest(int firstId, int secondID,String message)
 	{
 		EditText firstEt = (EditText) mActivity.findViewById(firstId);
 		EditText secondEt = (EditText) mActivity.findViewById(secondID);
-		if(firstEt.getText().toString().equals(secondEt.getText().toString()))
+        if(TextUtils.isEmpty(secondEt.getText().toString()))
+        {
+            secondEt.setError(message);
+            isValid = false;
+        }
+		else if(!firstEt.getText().toString().equals(secondEt.getText().toString()))
 		{
 			secondEt.setError(message);
-			return false;
+            isValid = false;
 		}
-		else
-			return true;
-	}
+
+    }
 	
-	private boolean validateCheckBox(int id,String message)
+	private void validateCheckBox(int id,String message)
 	{
 		CheckBox checkBox = (CheckBox) mActivity.findViewById(id);
 		if(checkBox.isChecked()){
 			onValidate(true, message);
-			return true;
 		}
-		else
-			return false;
-			
-	}
+		else{
+            Toast.makeText(mActivity,message,Toast.LENGTH_LONG).show();
+            isValid = false;
+        }
+    }
 	
-	private boolean validateRadioGroup(int id,String message)
+	private void validateRadioGroup(int id,String message)
 	{
 		RadioGroup radioGroup = (RadioGroup) mActivity.findViewById(id);
 		if(radioGroup.getCheckedRadioButtonId() != -1){
 			onValidate(true, message);
-			return true;
 		}
 		else
-			return false;
+            isValid = false;
 			
 	}
 	
-	private boolean validateRadioButton(int id,String message)
+	private void validateRadioButton(int id,String message)
 	{
 		RadioButton radioButton = (RadioButton) mActivity.findViewById(id);
 		if(radioButton.isChecked()){
 			onValidate(true, message);
-			return true;
-		}
-		else
-			return false;
+        }
+		else {
+            Toast.makeText(mActivity,message,Toast.LENGTH_LONG).show();
+            isValid = false;
+
+        }
 	}
 	
-	private boolean urlTest(int id,String message)
+	private void urlTest(int id,String message)
 	{
 		EditText et = (EditText) mActivity.findViewById(id);
 		if(TextUtils.isEmpty(et.getText().toString())){
 			et.setError(message);
-			return false;
+            isValid = false;
 		}
 		else if(!Patterns.WEB_URL.matcher(message).matches())
 		{
 			et.setError(message);
-			return false;
+            isValid = false;
 		}
-		else
-			return true;
+
 	}
 	
-	private boolean ipAddrTest(int id,String message)
+	private void ipAddrTest(int id,String message)
 	{
 		EditText et = (EditText) mActivity.findViewById(id);
 		if(TextUtils.isEmpty(et.getText().toString())){
 			et.setError(message);
-			return false;
+            isValid = false;
 		}
 		else if(!Patterns.IP_ADDRESS.matcher(message).matches())
 		{
 			et.setError(message);
-			return false;
+            isValid = false;
 		}
-		else
-			return true;
-	}
+    }
 	
 	protected void onValidate(boolean answer,String message)
 	{
 		
 	}
-
 }
